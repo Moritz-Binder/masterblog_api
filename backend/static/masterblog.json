@@ -1,0 +1,268 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Masterblog API",
+    "version": "1.0.0",
+    "description": "A RESTful API for managing a blog platform with CRUD operations, sorting, and regex searching."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5002",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Posts",
+      "description": "Operations related to blog posts"
+    }
+  ],
+  "paths": {
+    "/api/posts": {
+      "get": {
+        "tags": ["Posts"],
+        "summary": "Retrieve and sort blog posts",
+        "description": "Returns a list of all blog posts, with optional sorting by 'title' or 'content'.",
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "The field to sort by ('title' or 'content')",
+            "schema": {
+              "type": "string",
+              "enum": ["title", "content"]
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "description": "The sorting direction ('asc' or 'desc')",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "asc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Post"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid sort field or direction"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Posts"],
+        "summary": "Create a new blog post",
+        "description": "Adds a new post to the system. Requires 'title' and 'content'.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Post created successfully. Returns the full list of posts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Post"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing title or content in payload"
+          },
+          "415": {
+            "description": "Media type must be json format"
+          },
+          "422": {
+            "description": "Title and content values must be strings"
+          }
+        }
+      }
+    },
+    "/api/posts/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the post",
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "put": {
+        "tags": ["Posts"],
+        "summary": "Update an existing blog post",
+        "description": "Updates the title and/or content of an existing blog post.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Post updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Post with specified ID not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Posts"],
+        "summary": "Delete a blog post",
+        "description": "Removes a blog post by its unique ID.",
+        "responses": {
+          "200": {
+            "description": "Post deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Post with id 1 has been deleted successfully."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Post with specified ID not found"
+          }
+        }
+      }
+    },
+    "/api/posts/search": {
+      "get": {
+        "tags": ["Posts"],
+        "summary": "Search blog posts using regex",
+        "description": "Filter posts where the title or content matches the provided queries.",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "required": false,
+            "description": "Regex query string to search inside titles",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "content",
+            "in": "query",
+            "required": false,
+            "description": "Regex query string to search inside contents",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Post"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Post": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "First post"
+          },
+          "content": {
+            "type": "string",
+            "example": "This is the first post."
+          }
+        }
+      },
+      "NewPost": {
+        "type": "object",
+        "required": ["title", "content"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "New Blog Title"
+          },
+          "content": {
+            "type": "string",
+            "example": "This is the content of the new blog post."
+          }
+        }
+      },
+      "UpdatePost": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Updated Title"
+          },
+          "content": {
+            "type": "string",
+            "example": "Updated Content"
+          }
+        }
+      }
+    }
+  }
+}
